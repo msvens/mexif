@@ -22,15 +22,14 @@ const (
 )
 
 const (
-	ExifDateTime = "2006:01:02 15:04:05"
+	ExifDateTime       = "2006:01:02 15:04:05"
 	ExifDateTimeOffset = "2006:01:02 15:04:05 -07:00"
-	ExifDate = "2006:01:02"
-	ExifTime = "15:04:05"
+	ExifDate           = "2006:01:02"
+	ExifTime           = "15:04:05"
 )
 
 var IncorrectType = errors.New("Incorrect Type")
 var ValueNotFound = errors.New("Value Not Found")
-var NegativeValue = errors.New("Value is Negative")
 
 func GetUInt(field string, obj JSONObject) (uint, error) {
 	n, err := GetNumber(field, obj)
@@ -38,13 +37,13 @@ func GetUInt(field string, obj JSONObject) (uint, error) {
 		return 0, err
 	}
 	if n < 0 {
-		return 0, NegativeValue
+		return 0, IncorrectType
 	}
 	return uint(n), nil
 }
 
 func ScanUInt(field string, obj JSONObject, val *uint) error {
-	if v,err := GetUInt(field, obj); err == nil {
+	if v, err := GetUInt(field, obj); err == nil {
 		*val = v
 		return nil
 	} else {
@@ -100,7 +99,7 @@ func ParseDateTime(dt string, offset string) (time.Time, error) {
 	if offset == "" {
 		return time.Parse(ExifDateTime, dt)
 	} else {
-		return time.Parse(ExifDateTimeOffset, dt + " " +offset)
+		return time.Parse(ExifDateTimeOffset, dt+" "+offset)
 	}
 }
 
@@ -113,6 +112,15 @@ func GetBool(field string, obj JSONObject) (bool, error) {
 		}
 	}
 	return false, ValueNotFound
+}
+
+func ScanBool(field string, obj JSONObject, val *bool) error {
+	if v, err := GetBool(field, obj); err == nil {
+		*val = v
+		return nil
+	} else {
+		return err
+	}
 }
 
 func GetArray(field string, obj JSONObject) (JSONArray, error) {
@@ -146,6 +154,15 @@ func GetObject(field string, obj JSONObject) (JSONObject, error) {
 	return JSONObject{}, ValueNotFound
 }
 
+func ScanObject(field string, obj JSONObject, val *JSONObject) error {
+	if v, err := GetObject(field, obj); err == nil {
+		*val = v
+		return nil
+	} else {
+		return err
+	}
+}
+
 func GetNumber(field string, obj JSONObject) (float64, error) {
 	if v, f := obj[field]; f {
 		if s, t := v.(float64); t {
@@ -155,6 +172,15 @@ func GetNumber(field string, obj JSONObject) (float64, error) {
 		}
 	}
 	return 0, ValueNotFound
+}
+
+func ScanNumber(field string, obj JSONObject, val *float64) error {
+	if v, err := GetNumber(field, obj); err == nil {
+		*val = v
+		return nil
+	} else {
+		return err
+	}
 }
 
 func GetString(field string, obj JSONObject) (string, error) {
@@ -182,6 +208,10 @@ func IsType(val interface{}, jsonType JsonType) bool {
 }
 
 func TypeOf(i interface{}) JsonType {
+
+	if i == nil {
+		return JNull
+	}
 	switch t := i.(type) {
 	case string:
 		return JString
@@ -198,5 +228,3 @@ func TypeOf(i interface{}) JsonType {
 		return JUnknown
 	}
 }
-
-
