@@ -76,6 +76,23 @@ func ScanFloat32(field string, obj JSONObject, val *float32) error {
 	}
 }
 
+func GetFloat64(field string, obj JSONObject) (float64, error) {
+	n, err := GetNumber(field, obj)
+	if err != nil {
+		return 0, err
+	}
+	return float64(n), nil
+}
+
+func ScanFloat64(field string, obj JSONObject, val *float64) error {
+	if v, err := GetFloat64(field, obj); err == nil {
+		*val = v
+		return nil
+	} else {
+		return err
+	}
+}
+
 func GetDateTime(dtField string, offsetField string, obj JSONObject) (time.Time, error) {
 	dt, err := GetString(dtField, obj)
 	if err != nil {

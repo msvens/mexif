@@ -17,22 +17,20 @@ const Cmd = "exiftool"
 const JsonArg = "-j"
 const GroupArg = "-g2"
 
-
 var initArgs = []string{StayOpenArg, "True", "-@", "-", "-common_args"}
 
-
 type MExifTool struct {
-	mutex    sync.Mutex
+	mutex   sync.Mutex
 	stdin   io.WriteCloser
 	stdout  io.ReadCloser
 	scanout *bufio.Scanner
-	closed bool
+	closed  bool
 }
 
 func NewMExifTool(flags ...string) (*MExifTool, error) {
 	flags = append(initArgs, flags...)
 
-	tool := MExifTool{closed:true}
+	tool := MExifTool{closed: true}
 
 	cmd := exec.Command(Cmd, flags...)
 
@@ -58,8 +56,6 @@ func NewMExifTool(flags ...string) (*MExifTool, error) {
 
 	return &tool, nil
 }
-
-
 
 func (tool *MExifTool) Close() error {
 	tool.mutex.Lock()
@@ -103,7 +99,7 @@ func (tool *MExifTool) ExifData(path string) (*ExifData, error) {
 	return NewExifData(root), nil
 }
 
-func (tool *MExifTool) Unmarshal(path string) (map[string]interface{},error) {
+func (tool *MExifTool) Unmarshal(path string) (map[string]interface{}, error) {
 	bytes, err := tool.Read(path)
 	if err != nil {
 		return nil, err
@@ -111,7 +107,7 @@ func (tool *MExifTool) Unmarshal(path string) (map[string]interface{},error) {
 	var f []interface{}
 	err = json.Unmarshal(bytes, &f)
 	if err != nil {
-		return nil, err;
+		return nil, err
 	}
 	if len(f) < 1 {
 		return nil, fmt.Errorf("no data")
@@ -135,7 +131,6 @@ func (tool *MExifTool) ReadWithFlags(path string, flags ...string) ([]byte, erro
 	}
 	fmt.Fprintln(tool.stdin, JsonArg)
 	fmt.Fprintln(tool.stdin, GroupArg)
-	fmt.Println(path)
 	fmt.Fprintln(tool.stdin, path)
 	fmt.Fprintln(tool.stdin, ExecuteArg)
 
@@ -144,13 +139,11 @@ func (tool *MExifTool) ReadWithFlags(path string, flags ...string) ([]byte, erro
 		return nil, fmt.Errorf("Failed to read output")
 	} else {
 		results := tool.scanout.Bytes()
-		fmt.Println("len of results: ",len(results))
 		sendResults := make([]byte, len(results), len(results))
 		copy(sendResults, results)
 		return sendResults, nil
 	}
 }
-
 
 func splitReadyToken(data []byte, atEOF bool) (int, []byte, error) {
 	delimPos := bytes.Index(data, []byte("{ready}\n"))
@@ -176,4 +169,3 @@ func splitReadyToken(data []byte, atEOF bool) (int, []byte, error) {
 		}
 	}
 }
-
